@@ -53,73 +53,32 @@ export default defineConfig({
 
 ## Checklista innan PR
 
-Innan du öppnar en pull request, kontrollera:
+Vid kodändringar:
+- [ ] `npm test` – alla tester passerar
+- [ ] `npm run build` – bygget lyckas (typkontroll ingår automatiskt via `tsc --noEmit`)
+- [ ] `npm run dev` – appen startar korrekt på `http://localhost:5173/GoalBoard/`
 
-- [ ] **Bygget fungerar:** `npm run build`
-  - Typkontroll körs automatiskt (`tsc --noEmit`)
-  - Vite build lyckas
-  - `dist/` skapas korrekt
-  
-- [ ] **Testerna passerar:** `npm run test`
-  - Workflow kör tester före bygge
-  
-- [ ] **Dev server fungerar:** `npm run dev`
-  - Appen startar på `http://localhost:5173/GoalBoard/`
-  - Hot reload fungerar
-  
-- [ ] **GitHub Actions validering:**
-  - Workflow-syntax är korrekt (kör `actionlint` om tillgängligt)
-  - Alla actions har rätt versioner
-  - Miljövariabler är korrekt konfigurerade
-  
-- [ ] **Security best practices:**
-  - Actions är pinnade till versioner (ej `@latest`)
-  - Minimal permissions i workflow (`contents: read`, `pages: write`, etc.)
-  - Känsliga värden hanteras via `vars` (inte `secrets` för publika URL:er)
-  
-- [ ] **PR-beskrivning:**
-  - Första raden: `**Agent-roll:** Bygge & Publicering`
-  - Beskriv ändringar i build-process eller CI
-  - Om du ändrat Vite-config, förklara varför
+Vid workflow-ändringar:
+- [ ] Workflow-syntax korrekt
+- [ ] Actions pinnade till versioner
+- [ ] Minimal permissions (`contents: read`, `pages: write`, `id-token: write`)
+- [ ] Publika URL:er i `vars`, inte `secrets`
 
-## Handoff till andra roller
+Vid rena dokumentationsändringar: diff- och länkkontroll räcker.
 
-### Till Databas-rollen
-Om du:
-- Behöver lägga till nya miljövariabler i GitHub Actions
-- Ändrar hur `VITE_NEON_*` variabler hanteras
+## Koordinering med andra underagenter
 
-→ Koordinera så att konfigurationen fortfarande valideras korrekt.
-
-### Till Test-rollen
-Om du:
-- Ändrar test-konfiguration i `vite.config.ts`
-- Lägger till nya test-steg i CI
-
-→ Se till att alla tester fortfarande fungerar som förväntat.
-
-### Till Säkerhetsrollen
-Om du:
-- Lägger till eller uppdaterar GitHub Actions
-- Ändrar permissions i workflow
-- Lägger till nya dependencies som körs vid build-time
-
-→ Låt Säkerhetsrollen granska före merge.
-
-### Till Frontend-rollen
-Om du:
-- Ändrar basvägen (`base:` i vite.config)
-- Uppdaterar Vite-plugins som påverkar UI
-
-→ Se till att Frontend-rollen testar att UI fortfarande fungerar.
+- **Databas:** Koordinera vid nya `VITE_*`-variabler i GitHub Actions
+- **Test:** Vid ändringar i test-sektion av `vite.config.ts`
+- **Säkerhet:** Kopplas in vid GitHub Actions-ändringar, permissions eller nya build-dependencies
+- **Frontend:** Vid ändringar i basväg eller Vite-plugins som påverkar UI
 
 ## Best practices
 
-1. **Pin GitHub Actions:** Använd `@v4` inte `@latest` (ännu bättre: pin till commit SHA)
-2. **Minimal permissions:** Använd least privilege principle i workflows
-3. **Cache npm:** Använd `cache: npm` i `setup-node` för snabbare builds
-4. **Fail fast:** Kör tester före bygge (som i nuvarande workflow)
-5. **Dokumentera env vars:** Håll `.env.example` uppdaterad med alla `VITE_*` variabler
+1. Pin GitHub Actions till versioner (t.ex. `@v4`), helst commit SHA
+2. Minimal permissions i workflows (least privilege)
+3. Cache npm för snabbare builds (`cache: npm`)
+4. Kör tester före bygge (fail fast)
 
 ## GitHub Actions Workflow
 
@@ -149,10 +108,8 @@ Om du:
 
 - Uppdatera GitHub Actions workflow
 - Optimera build-prestanda
-- Konfigurera nya Vite-plugins
+- Konfigurera Vite-plugins
 - Felsöka build-fel
-- Uppdatera Node/npm version
-- Hantera dependency-uppdateringar (med försiktighet)
 
 ## Felsökning
 

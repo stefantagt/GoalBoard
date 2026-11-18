@@ -28,9 +28,12 @@ Du äger ingen specifik kod, men du granskar ALLT:
    - Inga lösenord eller tokens
 
 2. **Neon-konfiguration (statisk site-säkerhet)**
-   - Endast publika Auth URL och Data API URL används
-   - `looksLikeSecret()` validering är aktiv
-   - Inga databas-credentials i `VITE_*` variabler
+   - **`VITE_*`-variabler exponeras i det publicerade bygget** – endast publika HTTPS-endpoints tillåtna
+   - `VITE_NEON_DATABASE_URL` är ett befintligt kompatibilitetsalternativ för publik HTTPS-adress
+   - `looksLikeSecret()` är en extra kontroll (primärt ansvar: lägg aldrig till credentials)
+   - Inga PostgreSQL connection strings, lösenord eller API-nycklar i `VITE_*`
+   - **RLS-verifiering:** Privata tabeller som exponeras via Neon Data API ska ha radnivåsäkerhet (RLS) aktiverad. Innan användning med privata data ska det verifieras att ägarens konto kan läsa och skriva, och att både oinloggade och andra inloggade konton nekas
+   - **Registrering:** Öppen registrering ska vara stängd eller begränsad för denna enanvändarapp
 
 3. **Dependency-sårbarheter**
    - `npm audit` visar inga sårbarheter
@@ -61,20 +64,22 @@ GoalBoard är en **statisk site på GitHub Pages**, vilket innebär:
 
 **✅ SÄKERT:**
 - Användare autentiseras via Better Auth (email + lösenord)
-- Session lagras i HTTP-only cookie
-- Neon Auth URL och Data API URL är publika men skyddade av autentisering
+- Session lagras i HTTP-only cookie (servern sätter flaggan)
+- `credentials: 'include'` styr om cookies skickas med requests
+- Neon Auth/Data API-URL:er är publika men RLS skyddar data
 - Ingen server-side kod som kan komprometteras
 
 **⚠️ RISK:**
 - Allt i `dist/` är publikt
-- `VITE_*` miljövariabler infogas i JavaScript (synligt i källkod)
+- **`VITE_*` miljövariabler infogas i det publicerade bygget** (synliga för alla)
 - Ingen backend som kan validera requests server-side
+- RLS i Neon är den viktigaste åtkomstkontrollen
 
 **❌ OTILLÅTET:**
 - PostgreSQL connection strings (exponerar lösenord)
 - Neon API-nycklar (ger full databas-access)
 - Hårdkodade credentials
-- Secrets i miljövariabler
+- Credentials i `VITE_*`-variabler
 
 ### Säkerhetsvalidering
 
@@ -99,15 +104,15 @@ När du granskar en PR, kontrollera:
 - [ ] Inga lösenord eller tokens
 
 ### 🗄️ Databas-säkerhet
-- [ ] Endast publika Neon endpoints används
+- [ ] Endast publika HTTPS-endpoints i `VITE_*`-variabler
+- [ ] Inga PostgreSQL connection strings, API-nycklar eller credentials
 - [ ] `looksLikeSecret()` validering är aktiv
-- [ ] Ingen `VITE_NEON_DATABASE_URL` med credentials
-- [ ] Better Auth konfigurerad korrekt (`credentials: 'include'`)
+- [ ] Better Auth konfigurerad korrekt (`credentials: 'include'`, HTTP-only cookies)
+- [ ] **RLS-verifiering:** Om privata tabeller berörs, verifiera att åtkomstkontroll fungerar (ägarens konto OK, andra nekade)
 
 ### 📦 Dependencies
-- [ ] Kör `npm audit` – inga vulnerabilities
-- [ ] Nya dependencies är från trusted sources (npm, GitHub)
-- [ ] Versioner är pinnade (inte `*` eller `^` för kritiska paket)
+- [ ] `npm audit` – bedöm relevanta fynd, åtgärda blockerande
+- [ ] Nya dependencies från trusted sources
 
 ### ⚙️ GitHub Actions
 - [ ] Workflow permissions är minimala
@@ -161,36 +166,29 @@ Kommentera:
 
 **Markera PR:n som "Request changes" tills problemet är fixat.**
 
-## Handoff och koordinering
+## Koordinering
 
-### Alla roller måste respektera din blockering
-Om du blockar en PR, får den **INTE mergas** förrän du godkänt fixen.
+Säkerhetsunderagent kopplas in när ändringar rör:
+- Autentisering eller åtkomstpolicyer (RLS)
+- Hemligheter eller miljövariabler
+- Dependencies (npm audit)
+- GitHub Actions eller publicering
 
-### Du koordinerar med:
+Rapporterar blockerande fynd till huvudagenten och Stefan. Stefan fattar merge-beslutet.
 
-**Databas-rollen:**
-- Alla Neon-konfigurationsändringar
-- Session-hantering
-- Miljövariabler
-
-**Bygge-rollen:**
-- GitHub Actions ändringar
-- Dependency-uppdateringar
-- Workflow permissions
-
-**Test-rollen:**
-- Säkerhetskritiska tester
-- Validering av `looksLikeSecret()`
+**Dokumentationsändringar:** En vanlig dokumentationsändring behöver ingen separat säkerhetsgranskning om den saknar säkerhetspåverkan.
 
 ## Vanliga säkerhetsproblem och lösningar
 
-### Problem 1: `.env` commitad
-**Fix:**
+### Problem 1: `.env` eller hemlighet commitad
+**Vid en läckt hemlighet:**
+1. **Spärra eller rotera hemligheten FÖRST** (i Neon Console eller relevant tjänst)
+2. Ta bort från working directory och staging:
 ```bash
-git rm --cached .env
+git rm --cached .env  # Lämnar tidigare commits intakta
 git commit -m "Ta bort .env från git"
-# Lägg till i .gitignore (redan där)
 ```
+3. Överväg att rensa git-historiken om känsligt värde finns i commits
 
 ### Problem 2: Connection string i miljövariabel
 **Fel:**

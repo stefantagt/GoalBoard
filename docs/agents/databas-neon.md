@@ -30,30 +30,33 @@ Du ansvarar för all integration med Neon-databasen, autentisering, datamodeller
 **GoalBoard är en statisk site på GitHub Pages.** Detta innebär:
 
 1. **Allt i byggfilen är publikt**
-   - Vite infogar `VITE_*` miljövariabler direkt i JavaScript-koden
+   - **Vite infogar `VITE_*` miljövariabler i det publicerade bygget**
    - Hela `dist/`-mappen publiceras öppet på GitHub Pages
    - Ingen server-side kod körs – allt sker i användarens webbläsare
+   - **Alla `VITE_*`-värden är synliga i JavaScript-koden för alla**
 
-2. **Därför används ENDAST publika Neon-endpoints**
-   - `VITE_NEON_AUTH_URL` – Auth-endpoint (publikt)
-   - `VITE_NEON_DATA_API_URL` – Data API-endpoint (publikt)
-   - Alternativt: `VITE_NEON_DATABASE_URL` (HTTPS-adress utan credentials)
+2. **Därför används ENDAST publika HTTPS-endpoints**
+   - `VITE_NEON_AUTH_URL` – Auth-endpoint (publikt HTTPS)
+   - `VITE_NEON_DATA_API_URL` – Data API-endpoint (publikt HTTPS)
+   - `VITE_NEON_DATABASE_URL` – Befintligt kompatibilitetsalternativ för publik HTTPS-adress (SDK härleder Auth/Data API-URL:er från denna)
 
-3. **Autentisering sker via Better Auth**
-   - Användare loggar in med email + lösenord
-   - Session sparas i cookie (`credentials: 'include'`)
-   - Neon Auth-adapter hanterar session-validering
+3. **Autentisering och åtkomstkontroll**
+   - Användare loggar in med email + lösenord via Better Auth
+   - Session sparas i cookie med `credentials: 'include'` (styr om cookies skickas)
+   - Servern (Neon) sätter HTTP-only-flag på cookies
+   - **Radnivåsäkerhet (RLS) i Neon:** Privata tabeller som exponeras via Data API ska ha RLS aktiverad. Innan användning med privata data ska det verifieras att ägarens konto kan läsa och skriva, och att både oinloggade och andra inloggade konton nekas
+   - **Registrering:** Öppen registrering ska vara stängd eller begränsad för denna enanvändarapp
 
 4. **VAD DENNA ARKITEKTUR INNEBÄR:**
    - ✅ Användare autentiseras individuellt
-   - ✅ Sessioner är HTTP-only cookies (säkrare)
-   - ⚠️ Auth URL och Data API URL är publika (men skyddade av autentisering)
-   - ❌ Ingen PostgreSQL connection string får användas (skulle exponera lösenord)
-   - ❌ Ingen Neon API-nyckel får användas (skulle ge full databas-access)
+   - ✅ Sessioner skyddas av HTTP-only cookies
+   - ⚠️ Auth/Data API-URL:er är publika (men RLS skyddar data)
+   - ❌ PostgreSQL connection strings får ALDRIG användas (exponerar lösenord)
+   - ❌ Neon API-nycklar får ALDRIG användas (ger full databas-access)
 
 ## Säkerhetsvalidering av konfiguration
 
-`src/lib/config.ts` innehåller funktionen `looksLikeSecret()` som FÖRHINDRAR att hemligheter råkar komma in i koden:
+`src/lib/config.ts` innehåller funktionen `looksLikeSecret()` som är en **extra kontroll** för att förhindra att credentials råkar hamna i `VITE_*`-variabler:
 
 ```typescript
 // DESSA UPPTÄCKS OCH BLOCKERAS:
@@ -62,7 +65,12 @@ Du ansvarar för all integration med Neon-databasen, autentisering, datamodeller
 - URL:er med username eller password
 ```
 
-**Om du ändrar i konfiguration:** Se till att valideringen fortsätter fungera!
+Detta är ett säkerhetslager, men den primära ansvaret ligger på att aldrig lägga till hemligheter i första hand.
+
+**Vid en läckt hemlighet:**
+1. Spärra eller rotera hemligheten FÖRST (i Neon Console)
+2. Ta sedan bort från koden med `git rm --cached <fil>` (lämnar tidigare commits intakta)
+3. Överväg att rensa git-historiken om känsligt värde kommit in
 
 ## Vad du INTE får röra
 
@@ -79,93 +87,26 @@ Du får använda dessa komponenter i din kod, men ändra inte deras UI-logik.
 
 ## Checklista innan PR
 
-Innan du öppnar en pull request, kontrollera:
+- [ ] **Säkerhet:** Inga PostgreSQL connection strings, API-nycklar eller credentials i kod
+- [ ] **RLS-verifiering:** Om privata tabeller berörs, verifiera åtkomstkontroll (se ovan)
+- [ ] **Kontroller:** `npm test && npm run build` lyckas
+- [ ] **Miljövariabler:** `.env` inte commitad, `.env.example` endast platshållare
+- [ ] **Lokal test:** Autentisering och datahämtning fungerar
 
-- [ ] **Säkerhet:**
-  - Inga PostgreSQL connection strings i kod eller miljövariabler
-  - Inga Neon API-nycklar
-  - Endast publika Auth URL och Data API URL används
-  - `looksLikeSecret()` validering fortfarande aktiv
-  
-- [ ] **Kör testerna:** `npm run test`
-  - Alla tester passerar (inkl. `lib/rules.test.ts`)
-  - Om du ändrat datamodeller, uppdatera tester
-  
-- [ ] **Typkontroll:** `npm run typecheck`
-  - Inga TypeScript-fel
-  - Alla API-svar har korrekta typer
-  
-- [ ] **Bygget fungerar:** `npm run build`
-  - Bygget lyckas
-  - Inga varningar om miljövariabler
-  
-- [ ] **Testa lokalt:** `npm run dev`
-  - Autentisering fungerar
-  - Data hämtas korrekt från Neon
-  - Felmeddelanden är tydliga på svenska
-  
-- [ ] **Miljövariabler:**
-  - `.env` är INTE commitad (kolla `.gitignore`)
-  - `.env.example` innehåller endast platshållare
-  
-- [ ] **PR-beskrivning:**
-  - Första raden: `**Agent-roll:** Databas (Neon)`
-  - Beskriv databasändringar och säkerhetsöverväganden
-  - Om du ändrat autentiseringsflöde, förklara varför
+## Koordinering med andra underagenter
 
-## Handoff till andra roller
-
-### Till Frontend-rollen
-Om du:
-- Lagt till nya datatyper som behöver visas i UI
-- Ändrat API-svar som påverkar komponenter
-
-→ Dokumentera ändringarna och låt Frontend-rollen uppdatera UI.
-
-### Till Säkerhetsrollen (ALLTID)
-**Alla databas-PR:ar MÅSTE granskas av Säkerhetsrollen innan merge.**
-
-Särskilt viktigt om du:
-- Ändrat autentiseringslogik
-- Lagt till nya miljövariabler
-- Modifierat `config.ts` eller `neon.ts`
-- Arbetat med session-hantering
-
-Säkerhetsrollen verifierar att ingen databashemlighet kan läcka.
-
-### Till Test-rollen
-Om du:
-- Lagt till komplex affärslogik i `api.ts`
-- Ändrat datamodeller som behöver test coverage
-
-→ Låt Test-rollen lägga till lämpliga enhetstester.
+- **Säkerhet:** Kopplas in vid ändringar som rör autentisering, åtkomstpolicyer, hemligheter eller miljövariabler
+- **Frontend:** Dokumentera nya datatyper eller API-ändringar som påverkar UI
+- **Test:** Komplex affärslogik eller datamodells-ändringar behöver test coverage
 
 ## Best practices
 
-1. **Använd aldrig riktiga credentials:** Endast publika endpoints
-2. **Typade queries:** Alla databas-anrop ska vara typade
-3. **Error-hantering:** Använd `src/lib/errors.ts` för användbara felmeddelanden
-4. **Svenska:** Alla felmeddelanden på svenska
-5. **Session-hantering:** Lita på Better Auth-adaptern, modda inte själv
-6. **Validering:** Kör alltid `looksLikeSecret()` på nya miljövariabler
-
-## Vanliga uppgifter
-
-- Lägga till nya databasqueries
-- Uppdatera datamodeller
-- Förbättra autentiseringsflöde
-- Implementera error-hantering
-- Optimera datahämtning
-- Validera användarinput innan databas-anrop
+1. Endast publika HTTPS-endpoints i `VITE_*`-variabler
+2. Typade databas-anrop och API-svar
+3. Felmeddelanden på svenska via `src/lib/errors.ts`
+4. Lita på Better Auth – ingen egen session-hantering
+5. Verifiera RLS-åtkomst innan privata tabeller används
 
 ## Säkerhetsflaggning
 
-**OM DU UPPTÄCKER:**
-- Att någon försöker lägga till en PostgreSQL connection string
-- Att en Neon API-nyckel finns i koden
-- Att session-hantering är osäker
-- Att känslig data exponeras i klientkoden
-
-**→ STOPPA och flagga till Säkerhetsrollen OMEDELBART.**
-
-Föreslå en säker lösning men implementera inte något som bryter säkerhetsmodellen.
+Om du upptäcker att någon försöker lägga till PostgreSQL connection strings, API-nycklar eller andra credentials: **stoppa och flagga till Säkerhet och huvudagenten omedelbart.**

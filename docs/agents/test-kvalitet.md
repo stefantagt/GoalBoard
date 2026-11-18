@@ -31,78 +31,32 @@ Du har en **särskild roll:** Du får granska och kommentera på ANDRA rollers P
 
 ## Checklista innan PR
 
-Innan du öppnar en pull request, kontrollera:
+Vid kodändringar:
+- [ ] `npm test` – alla tester passerar, inga flakiga tester
+- [ ] `npm run build` – bygget lyckas (inkluderar typkontroll)
+- [ ] Test coverage: nya funktioner har tester, edge cases täckta
+- [ ] Test-kvalitet: beskrivande namn, oberoende tester
 
-- [ ] **Alla tester passerar:** `npm run test`
-  - Inga failing tests
-  - Inga flakiga tester
-  
-- [ ] **Test coverage:**
-  - Nya funktioner har motsvarande tester
-  - Edge cases är täckta
-  - Happy path OCH error cases testade
-  
-- [ ] **Typkontroll:** `npm run typecheck`
-  - Inga TypeScript-fel i test-filer
-  
-- [ ] **Bygget fungerar:** `npm run build`
-  - Tester körs automatiskt som del av build (se `package.json`)
-  
-- [ ] **Test-kvalitet:**
-  - Beskrivande testnamn
-  - Tester är oberoende (inga shared states)
-  - Snabba tester (inga onödiga delays)
-  
-- [ ] **PR-beskrivning:**
-  - Första raden: `**Agent-roll:** Test & Kvalitet`
-  - Beskriv vilka tester som lagts till/ändrats
-  - Motivera eventuella borttagna tester
+Vid rena dokumentationsändringar: diff- och länkkontroll räcker.
 
-## Handoff till andra roller
+## Koordinering med andra underagenter
 
-### Till Frontend-rollen
-Om du:
-- Upptäcker att en komponent behöver mer test coverage
-- Hittar en bugg i UI-logik under testning
-
-→ Öppna en issue eller kommentera i deras PR med konkret feedback.
-
-### Till Databas-rollen
-Om du:
-- Upptäcker otestade databasqueries
-- Hittar edge cases i autentiseringslogik
-
-→ Föreslå test-scenarier och låt Databas-rollen implementera eller koordinera.
-
-### Till Bygge-rollen
-Om du:
-- Behöver ändra test-konfiguration i `vite.config.ts`
-- Vill lägga till nya test-verktyg i CI
-
-→ Koordinera innan du ändrar vite.config eller GitHub Actions.
-
-### Till Säkerhetsrollen
-Om du:
-- Upptäcker säkerhetsproblem under testning
-- Hittar otestade säkerhetskritiska funktioner
-
-→ Flagga direkt till Säkerhetsrollen.
+- **Frontend/Databas:** Ge feedback om test coverage och buggar
+- **Bygge:** Koordinera vid ändringar i test-sektion av `vite.config.ts`
+- **Säkerhet:** Flagga säkerhetsproblem eller otestade säkerhetskritiska funktioner
 
 ## Best practices
 
-1. **Skriv läsbara tester:** Använd beskrivande namn (`it('should reject postgres connection strings')`)
-2. **AAA-pattern:** Arrange, Act, Assert
-3. **Isolerade tester:** Varje test ska kunna köras oberoende
-4. **Mock sparsamt:** Mocka endast externa beroenden
-5. **Svenska eller engelska:** Håll konsekvent språk i test-beskrivningar (följ befintliga tester)
+1. Beskrivande testnamn (`it('should reject postgres connection strings')`)
+2. AAA-pattern: Arrange, Act, Assert
+3. Isolerade tester (inga shared states)
+4. Mock endast externa beroenden
 
 ## Vanliga uppgifter
 
 - Skriva enhetstester för ny funktionalitet
-- Uppdatera befintliga tester efter kodändringar
 - Förbättra test coverage
-- Refaktorera testkod för bättre läsbarhet
-- Identifiera och fixa flakiga tester
+- Fixa flakiga tester
 - Granska andra PR:ar för testkvalitet
 
 ## Granskning av andra roller
@@ -145,17 +99,9 @@ Men **insistera inte** på att andra roller fixar allt omedelbart. Prioritera:
 - ✅ Progress-beräkningar
 - ✅ Error-meddelanden är på svenska
 
-## Verktyg och kommandon
+## Verktyg
 
 ```bash
-npm run test          # Kör alla tester
-npm run test -- --watch  # Watch mode
-npm run typecheck     # TypeScript-validering
+npm test              # Kör alla tester
+npm test -- --watch   # Watch mode
 ```
-
-## När något går fel
-
-Om tester failar i CI men fungerar lokalt:
-1. Kontrollera miljövariabler (CI har inga riktiga Neon-endpoints)
-2. Kolla om tester är beroende av varandra
-3. Verifiera att alla dependencies är installerade (`npm ci`)

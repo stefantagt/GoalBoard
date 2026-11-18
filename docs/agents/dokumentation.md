@@ -33,182 +33,34 @@ Du äger inte applikationskoden, men du ansvarar för att **dokumentera** den n�
 
 ## Checklista innan PR
 
-Innan du öppnar en pull request, kontrollera:
+- [ ] README, AGENTS.md och rolldokument är aktuella och konsekventa
+- [ ] Länkar mellan dokument fungerar
+- [ ] Kommentarer förklarar *varför*, inte *vad*
+- [ ] Inga föråldrade kommentarer
+- [ ] Vid kodändringar: `npm test && npm run build` lyckas
 
-- [ ] **README är aktuellt:**
-  - Installations-instruktioner stämmer
-  - Alla npm-skript är dokumenterade
-  - Tekniker och versioner är korrekta
-  
-- [ ] **AGENTS.md är synkroniserat:**
-  - Rolltabellen länkar till alla rollfiler
-  - Globala regler är tydliga
-  
-- [ ] **Rolldokument är konsekventa:**
-  - Alla roller har samma struktur
-  - Länkar mellan dokument fungerar
-  
-- [ ] **Kommentarer är meningsfulla:**
-  - Förklarar *varför*, inte *vad*
-  - På svenska eller engelska konsekvent
-  - Inga föråldrade kommentarer kvar
-  
-- [ ] **Koden byggs:** `npm run build`
-  - Dokumentationen orsakar inga build-fel
-  
-- [ ] **PR-beskrivning:**
-  - Första raden: `**Agent-roll:** Dokumentation`
-  - Beskriv vilken dokumentation som uppdaterats
-  - Nämn om ändringar påverkar andra roller
+## Koordinering med andra underagenter
 
-## Handoff till andra roller
-
-### Till alla roller
-När du uppdaterar dokumentation:
-- Verifiera att det du skriver stämmer med faktisk kod
-- Om något är oklart, fråga relevant roll:
-  - **Frontend:** UI/UX-dokumentation
-  - **Databas:** Neon-integration
-  - **Bygge:** Build-process
-  - **Test:** Teststrategi
-
-### Till Säkerhetsrollen
-Om du:
-- Dokumenterar säkerhetskritiska aspekter
-- Skriver om miljövariabler eller secrets
-
-→ Låt Säkerhetsrollen granska att dokumentationen inte exponerar sårbarheter.
+- Verifiera dokumentation mot faktisk kod med relevant underagent
+- **Säkerhet:** Granska om dokumentation rör säkerhetskritiska aspekter eller miljövariabler
 
 ## Best practices
 
-1. **Håll README kort:** Fokusera på hur man kommer igång
-2. **Länka istället för att duplicera:** Referera till rolldokument istället för att upprepa
-3. **Använd markdown korrekt:** Rubriker, listor, kodblock
-4. **Exempel är bra:** Visa konkreta exempel på kommandon och output
-5. **Uppdatera när kod ändras:** Dokumentation ska alltid spegla verkligheten
-
-## Vanliga uppgifter
-
-- Uppdatera README efter nya features
-- Dokumentera API-ändringar
-- Skriva eller uppdatera agent-rolldokument
-- Lägga till kommentarer i komplex kod
-- Skapa utvecklarguider
-- Dokumentera säkerhetspolicies
+1. Håll README kort och fokuserad på hur man kommer igång
+2. Länka till rolldokument istället för att duplicera
+3. Dokumentation ska spegla faktisk kod
+4. Kommentarer förklarar *varför*, inte *vad*
 
 ## Vad som ska dokumenteras
 
-### I README.md
-- Projektöversikt
-- Hur man kommer igång (installation, setup)
-- Tillgängliga npm-skript
-- Deployment-process
-- Länk till AGENTS.md för agents
+- **README.md:** Projektöversikt, setup, npm-skript
+- **AGENTS.md:** Agentstruktur, globala regler, rolltabell
+- **Rolldokument:** Syfte, ansvar, filområden, koordinering
+- **Kommentarer i kod:** Komplexa algoritmer, business rules, workarounds (förklara *varför*, inte *vad*)
 
-### I AGENTS.md
-- Projektöversikt för agents
-- Globala regler
-- Tabell med alla roller
-- Hur roller koordinerar
+**Dokumentera INTE:** Uppenbar kod, självförklarande funktionsnamn, standard patterns
 
-### I rolldokument (docs/agents/)
-- Syfte och ansvar
-- Filer och tekniker
-- Vad rollen INTE får röra
-- Checklista innan PR
-- Handoff till andra roller
-- Best practices
-
-### I kod (via kommentarer)
-- **Komplexa algoritmer:** Förklara steget-för-steg
-- **Business rules:** Varför vissa regler finns
-- **Workarounds:** Temporära lösningar och varför
-- **Security:** Varför något görs på ett visst sätt för säkerhet
-- **Performance:** Optimeringar som inte är uppenbara
-
-### Vad som INTE ska dokumenteras
-- Uppenbar kod (t.ex. "// Create variable x")
-- Självförklarande funktionsnamn
-- Standard React patterns
-- Triviala getters/setters
-
-## Format och stil
-
-### Markdown i dokumentation
-```markdown
-# Huvudrubrik (H1)
-## Sektion (H2)
-### Undersektion (H3)
-
-- Lista
-- Punkter
-
-**Fetstil** för viktigt
-*Kursiv* för betoning
-`kod` för kommandon
-```
-
-### Kommentarer i TypeScript
-```typescript
-// Kort förklaring på en rad
-
-/**
- * Längre förklaring som beskriver en funktion.
- * @param input - Vad parametern gör
- * @returns Vad funktionen returnerar
- */
-export function example(input: string): boolean {
-  // Förklara komplicerad logik här
-  return input.length > 0
-}
-```
-
-### Svenska vs Engelska
-- **Dokumentation (README, AGENTS):** Svenska
-- **Kommentarer i kod:** Följ befintliga konventioner (oftast engelska)
-- **JSDoc:** Engelska
-- **Git commit messages:** Svenska (Stefan föredrar det)
-
-## När något är oklart
-
-Om du ska dokumentera något men är osäker:
-1. **Läs koden noggrant** – försök förstå först
-2. **Kolla git history** – se varför något lades till
-3. **Fråga via PR-kommentar** – tagga relevant roll
-4. **Dokumentera det du vet** – markera oklarheter med `TODO` eller `FIXME`
-
-Exempel:
-```typescript
-// TODO(Dokumentation): Behöver verifieras med Databas-rollen
-// FIXME: Denna logik är oklar, dokumentera när den har refaktorerats
-```
-
-## Granskning av dokumentation
-
-När en annan roll öppnar en PR som påverkar dokumentation:
-- Kontrollera att README/AGENTS uppdateras om nödvändigt
-- Föreslå dokumentation om något är oklart
-- Granska kommentarer för tydlighet
-
-**Format för granskningskommentar:**
-```
-📄 **Dokumentationsfeedback:**
-- [ ] README behöver uppdateras med nya skript
-- [ ] Lägg till kommentar i `api.ts` som förklarar denna logik
-- [ ] AGENTS.md: uppdatera Databas-rollens ansvarsområde
-```
-
-## Verktyg
-
-- **Markdown preview:** Använd VS Code eller Cursor för förhandsvisning
-- **Linkcheck:** Verifiera att länkar i dokumentation fungerar
-- **Spell check:** Kontrollera stavning (särskilt i README)
-
-## Kontinuerlig förbättring
-
-Dokumentation är aldrig "klar". När du läser koden och upptäcker:
-- Förvirrande logik utan kommentarer
-- Föråldrad dokumentation
-- Saknade förklaringar
-
-→ Öppna en PR för att förbättra.
+### Språk
+- Dokumentation (README, AGENTS): Svenska
+- Kommentarer i kod: Följ befintliga konventioner
+- Git commit messages: Svenska
