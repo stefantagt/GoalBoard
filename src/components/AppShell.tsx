@@ -64,6 +64,9 @@ export function AppShell() {
           ))}
         </nav>
         <Account />
+        <div className="mt-3 px-2 text-center text-xs text-muted/60">
+          GoalBoard v{__APP_VERSION__}
+        </div>
       </aside>
 
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-paper/90 px-4 py-3 backdrop-blur md:hidden" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
@@ -77,6 +80,9 @@ export function AppShell() {
         <div className="mx-auto max-w-5xl rise">
           {board.error ? <p className="mb-4 rounded-2xl bg-amber-soft px-4 py-3 text-sm text-amber">{board.error}</p> : null}
           <Outlet />
+        </div>
+        <div className="mx-auto mt-8 max-w-5xl text-center text-xs text-muted/60 md:hidden">
+          GoalBoard v{__APP_VERSION__}
         </div>
       </main>
 
