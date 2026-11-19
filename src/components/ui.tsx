@@ -80,6 +80,7 @@ const statusTone: Record<string, string> = {
   active: 'bg-sage-soft text-sage-deep',
   paused: 'bg-amber-soft text-amber',
   completed: 'bg-sea-soft text-sea',
+  launched: 'bg-sage-soft text-sage-deep',
   done: 'bg-sage-soft text-sage-deep',
   archived: 'bg-paper-deep text-muted',
   idea: 'bg-sea-soft text-sea',
@@ -114,10 +115,12 @@ export function ErrorNote({ children }: { children: ReactNode }) {
 export function Dialog({
   title,
   onClose,
+  wide = false,
   children,
 }: {
   title: string
   onClose: () => void
+  wide?: boolean
   children: ReactNode
 }) {
   useEffect(() => {
@@ -134,7 +137,7 @@ export function Dialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
-        className="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-card p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl"
+        className={`max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-card p-5 shadow-2xl sm:rounded-3xl ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between gap-4">

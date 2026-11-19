@@ -84,6 +84,32 @@ export function ProjectFields({
           </select>
         </Field>
       </div>
+      <p className="pt-2 text-xs font-medium tracking-[0.16em] text-sage uppercase">Inventering</p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Huvudspråk">
+          <input className={fieldClass} value={draft.primary_language} onChange={(event) => set({ primary_language: event.target.value })} />
+        </Field>
+        <Field label="Språk" hint="Separera med kommatecken.">
+          <input className={fieldClass} value={draft.languages} onChange={(event) => set({ languages: event.target.value })} />
+        </Field>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Rader">
+          <input className={fieldClass} inputMode="numeric" value={draft.line_count} onChange={(event) => set({ line_count: event.target.value })} />
+        </Field>
+        <Field label="Filer">
+          <input className={fieldClass} inputMode="numeric" value={draft.file_count} onChange={(event) => set({ file_count: event.target.value })} />
+        </Field>
+        <Field label="Mappar">
+          <input className={fieldClass} inputMode="numeric" value={draft.folder_count} onChange={(event) => set({ folder_count: event.target.value })} />
+        </Field>
+      </div>
+      <Field label="Senast ändrad i repot">
+        <input className={fieldClass} type="date" value={draft.repo_changed_on} onChange={(event) => set({ repo_changed_on: event.target.value })} />
+      </Field>
+      <Field label="Funktioner" hint="Separera med kommatecken.">
+        <textarea className={`${fieldClass} min-h-20 resize-y`} value={draft.features} onChange={(event) => set({ features: event.target.value })} />
+      </Field>
       <Field label="Teknikstack" hint="Separera med kommatecken, till exempel React, Vite, Neon.">
         <input className={fieldClass} value={draft.tech_stack} onChange={(event) => set({ tech_stack: event.target.value })} />
       </Field>
@@ -128,6 +154,13 @@ export function projectToDraft(project: {
   github_url: string
   live_url: string
   notes: string
+  primary_language: string
+  languages: string
+  line_count: number | null
+  file_count: number | null
+  folder_count: number | null
+  repo_changed_on: string | null
+  features: string
   goal_id: string | null
 }): ProjectDraft {
   return {
@@ -138,6 +171,13 @@ export function projectToDraft(project: {
     github_url: project.github_url,
     live_url: project.live_url,
     notes: project.notes,
+    primary_language: project.primary_language,
+    languages: project.languages,
+    line_count: project.line_count === null ? '' : String(project.line_count),
+    file_count: project.file_count === null ? '' : String(project.file_count),
+    folder_count: project.folder_count === null ? '' : String(project.folder_count),
+    repo_changed_on: project.repo_changed_on ?? '',
+    features: project.features,
     goal_id: project.goal_id ?? '',
   }
 }

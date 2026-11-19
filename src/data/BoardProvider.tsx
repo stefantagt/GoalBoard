@@ -6,6 +6,7 @@ import {
   deleteTask,
   insertGoal,
   insertMilestone,
+  importProjectTable,
   insertProject,
   insertTask,
   loadBoard,
@@ -37,6 +38,7 @@ type BoardContextValue = {
   createProject: (draft: ProjectDraft) => Promise<void>
   saveProject: (id: string, draft: ProjectDraft) => Promise<void>
   removeProject: (id: string) => Promise<void>
+  importProjects: (text: string) => Promise<void>
 }
 
 const BoardContext = createContext<BoardContextValue | null>(null)
@@ -100,6 +102,8 @@ export function BoardProvider({ client, children }: { client: NeonClient; childr
       createProject: (draft) => run(() => insertProject(client, draft)),
       saveProject: (id, draft) => run(() => updateProject(client, id, draft)),
       removeProject: (id) => run(() => deleteProject(client, id)),
+      importProjects: (text) =>
+        run(() => importProjectTable(client, text, (snapshot?.projects ?? []).map((project) => ({ id: project.id, name: project.name })))),
     }
   }, [client, error, loading, refresh, snapshot])
 

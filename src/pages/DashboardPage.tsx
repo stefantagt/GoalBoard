@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import { useBoard } from '../data/BoardProvider'
 import { formatDate, formatLongDate } from '../lib/dates'
 import { categoryLabel, goalStatusLabel } from '../lib/labels'
-import { goalProgress, progressCaption } from '../lib/progress'
+import { GoalProgress } from '../components/GoalProgress'
 import { countGoals, importantGoals, milestonesFor, nextTasks, tasksFor, weekTasks } from '../lib/select'
-import { Button, Card, EmptyState, PageHeader, ProgressBar, StatusBadge, usePageTitle } from '../components/ui'
+import { Button, Card, EmptyState, PageHeader, StatusBadge, usePageTitle } from '../components/ui'
 
 export function DashboardPage() {
   usePageTitle('Översikt')
@@ -62,7 +62,6 @@ export function DashboardPage() {
             {highlighted.map((goal) => {
               const goalMilestones = milestonesFor(milestones, goal.id)
               const goalTasks = tasksFor(tasks, goal.id)
-              const progress = goalProgress(goalMilestones, goalTasks, goal.status)
               return (
                 <Link key={goal.id} to={`/mal/${goal.id}`} className="rounded-3xl border border-line bg-card p-5 transition hover:-translate-y-0.5 hover:border-sage/40">
                   <div className="flex items-start justify-between gap-3">
@@ -73,11 +72,7 @@ export function DashboardPage() {
                     <StatusBadge status={goal.status} label={goalStatusLabel(goal.status)} />
                   </div>
                   <div className="mt-5">
-                    <div className="mb-2 flex justify-between text-xs text-muted">
-                      <span>{progressCaption(goalMilestones, goalTasks)}</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <ProgressBar value={progress} />
+                    <GoalProgress milestones={goalMilestones} tasks={goalTasks} status={goal.status} compact />
                     <p className="mt-3 text-xs text-muted">Måldatum {formatDate(goal.target_date)}</p>
                   </div>
                 </Link>

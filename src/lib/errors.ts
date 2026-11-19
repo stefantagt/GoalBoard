@@ -6,6 +6,9 @@ export type ApiError = {
 export function toUserMessage(error: ApiError | null | undefined): string {
   const message = error?.message?.trim() || 'Okänt fel från databasen.'
   const code = error?.code ?? ''
+  if (code === 'PGRST204' || /could not find the '.+' column/i.test(message)) {
+    return 'Data API har inte läst in de nya kolumnerna ännu. Öppna Data API i Neon och välj Refresh schema cache.'
+  }
   if (
     code === 'PGRST205' ||
     code === 'PGRST202' ||

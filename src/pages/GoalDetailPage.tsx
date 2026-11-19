@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { GoalFields, goalToDraft } from '../components/forms'
-import { Button, Card, Dialog, ErrorNote, PageHeader, ProgressBar, StatusBadge, usePageTitle } from '../components/ui'
+import { GoalProgress } from '../components/GoalProgress'
+import { Button, Card, Dialog, ErrorNote, PageHeader, StatusBadge, usePageTitle } from '../components/ui'
 import { useBoard } from '../data/BoardProvider'
 import { dueLabel, dueTone, formatDate } from '../lib/dates'
 import { categoryLabel, goalStatusLabel, projectStatusLabel } from '../lib/labels'
-import { goalProgress, progressCaption } from '../lib/progress'
 import { milestonesFor, projectsForGoal, tasksFor } from '../lib/select'
 import type { GoalDraft } from '../lib/types'
 
@@ -35,7 +35,6 @@ export function GoalDetailPage() {
     )
   }
 
-  const progress = goalProgress(milestones, tasks, goal.status)
   const allTasksDone = tasks.length > 0 && tasks.every((task) => task.completed)
 
   async function run(action: () => Promise<void>) {
@@ -58,13 +57,9 @@ export function GoalDetailPage() {
       />
 
       <Card>
-        <div className="mb-2 flex justify-between text-sm text-muted">
-          <span>{progressCaption(milestones, tasks)}</span>
-          <span>{progress}%</span>
-        </div>
-        <ProgressBar value={progress} />
+        <GoalProgress milestones={milestones} tasks={tasks} status={goal.status} />
         <p className="mt-3 text-xs leading-5 text-muted">
-          Framsteg räknas på aktiviteter när det finns några. Annars används delmål. Ett mål utan båda är 0 %, eller 100 % om status är uppnått.
+          Delmål och aktiviteter räknas var för sig. Ett mål utan båda är 0 %, eller 100 % när status är uppnått.
         </p>
         <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
           <div>

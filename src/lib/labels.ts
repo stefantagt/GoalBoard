@@ -17,9 +17,10 @@ export const goalStatuses: { value: GoalStatus; label: string }[] = [
 
 export const projectStatuses: { value: ProjectStatus; label: string }[] = [
   { value: 'idea', label: 'Idé' },
-  { value: 'active', label: 'Aktivt' },
+  { value: 'active', label: 'Utveckling pågår' },
   { value: 'paused', label: 'Pausat' },
   { value: 'done', label: 'Klart' },
+  { value: 'launched', label: 'Lanserat/live' },
   { value: 'archived', label: 'Arkiverat' },
 ]
 

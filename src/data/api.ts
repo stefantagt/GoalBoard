@@ -1,5 +1,6 @@
 import { toUserMessage, type ApiError } from '../lib/errors'
 import type { NeonClient } from '../lib/neon'
+import { createPayload, listField, parseCount, parseProjectTable, planImport, updatePayload } from '../lib/projectImport'
 import type { Goal, GoalDraft, Milestone, Project, ProjectDraft, Task } from '../lib/types'
 import { normalizeHttpUrl } from '../lib/urls'
 
@@ -132,6 +133,17 @@ export async function deleteProject(client: NeonClient, id: string): Promise<voi
   await write(client.from('projects').delete().eq('id', id).select('id') as PromiseLike<QueryResult>, true)
 }
 
+export async function importProjectTable(client: NeonClient, text: string, existing: { id: string; name: string }[]): Promise<void> {
+  const plan = planImport(existing, parseProjectTable(text))
+  if (plan.create.length === 0 && plan.update.length === 0) throw new Error('Ingen rad att importera.')
+  if (plan.create.length > 0) {
+    await write(client.from('projects').insert(plan.create.map(createPayload)) as PromiseLike<QueryResult>)
+  }
+  for (const item of plan.update) {
+    await write(client.from('projects').update(updatePayload(item.project)).eq('id', item.id).select('id') as PromiseLike<QueryResult>, true)
+  }
+}
+
 function goalPayload(draft: GoalDraft) {
   return {
     title: draft.title.trim(),
@@ -155,8 +167,22 @@ function projectPayload(draft: ProjectDraft) {
     github_url: normalizeHttpUrl(draft.github_url),
     live_url: normalizeHttpUrl(draft.live_url),
     notes: draft.notes.trim(),
+    primary_language: draft.primary_language.trim().toLowerCase() === 'unknown' ? '' : draft.primary_language.trim(),
+    languages: listField(draft.languages),
+    line_count: draftCount(draft.line_count, 'Rader'),
+    file_count: draftCount(draft.file_count, 'Filer'),
+    folder_count: draftCount(draft.folder_count, 'Mappar'),
+    repo_changed_on: draft.repo_changed_on.trim() || null,
+    features: listField(draft.features),
     goal_id: draft.goal_id || null,
   }
+}
+
+function draftCount(value: string, label: string): number | null {
+  if (!value.trim()) return null
+  const parsed = parseCount(value)
+  if (parsed === null) throw new Error(`${label} behöver vara ett antal, till exempel 1500 eller 1,5k.`)
+  return parsed
 }
 
 function validateGoalDraft(draft: GoalDraft) {
@@ -261,6 +287,13 @@ function parseProject(value: unknown): Project[] {
       github_url: stringField(value.github_url),
       live_url: stringField(value.live_url),
       notes: stringField(value.notes),
+      primary_language: stringField(value.primary_language),
+      languages: stringField(value.languages),
+      line_count: nullableNumber(value.line_count),
+      file_count: nullableNumber(value.file_count),
+      folder_count: nullableNumber(value.folder_count),
+      repo_changed_on: nullableString(value.repo_changed_on),
+      features: stringField(value.features),
       created_at: stringField(value.created_at),
       updated_at: stringField(value.updated_at),
     },
@@ -283,6 +316,12 @@ function numberField(value: unknown): number {
   return typeof value === 'number' ? value : 0
 }
 
+function nullableNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value)
+  return null
+}
+
 function isGoalCategory(value: unknown): value is Goal['category'] {
   return value === 'ekonomi' || value === 'egna_projekt' || value === 'halsa' || value === 'familj' || value === 'ovrigt'
 }
@@ -292,5 +331,5 @@ function isGoalStatus(value: unknown): value is Goal['status'] {
 }
 
 function isProjectStatus(value: unknown): value is Project['status'] {
-  return value === 'idea' || value === 'active' || value === 'paused' || value === 'done' || value === 'archived'
+  return value === 'idea' || value === 'active' || value === 'paused' || value === 'done' || value === 'launched' || value === 'archived'
 }

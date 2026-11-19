@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { GoalFields } from '../components/forms'
-import { Button, Card, Dialog, EmptyState, ErrorNote, PageHeader, ProgressBar, StatusBadge, usePageTitle } from '../components/ui'
+import { GoalProgress } from '../components/GoalProgress'
+import { Button, Card, Dialog, EmptyState, ErrorNote, PageHeader, StatusBadge, usePageTitle } from '../components/ui'
 import { useBoard } from '../data/BoardProvider'
 import { categoryLabel, goalCategories, goalStatusLabel } from '../lib/labels'
-import { goalProgress } from '../lib/progress'
 import { milestonesFor, tasksFor, visibleGoals } from '../lib/select'
 import { emptyGoalDraft, type GoalCategory, type GoalDraft } from '../lib/types'
 import { formatDate } from '../lib/dates'
@@ -82,11 +82,6 @@ export function GoalsPage() {
       ) : (
         <div className="grid gap-3">
           {visible.map((goal) => {
-            const progress = goalProgress(
-              milestonesFor(board.snapshot?.milestones ?? [], goal.id),
-              tasksFor(board.snapshot?.tasks ?? [], goal.id),
-              goal.status,
-            )
             return (
               <Link key={goal.id} to={`/mal/${goal.id}`}>
                 <Card className="transition hover:border-sage/40">
@@ -99,8 +94,13 @@ export function GoalsPage() {
                   </div>
                   {goal.description ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted">{goal.description}</p> : null}
                   <div className="mt-4">
-                    <ProgressBar value={progress} />
-                    <p className="mt-2 text-xs text-muted">{progress}% · Måldatum {formatDate(goal.target_date)}</p>
+                    <GoalProgress
+                      milestones={milestonesFor(board.snapshot?.milestones ?? [], goal.id)}
+                      tasks={tasksFor(board.snapshot?.tasks ?? [], goal.id)}
+                      status={goal.status}
+                      compact
+                    />
+                    <p className="mt-2 text-xs text-muted">Måldatum {formatDate(goal.target_date)}</p>
                   </div>
                 </Card>
               </Link>

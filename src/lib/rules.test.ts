@@ -1,28 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import { readNeonConfig, looksLikeSecret } from './config'
+import { toUserMessage } from './errors'
 import { dueLabel } from './dates'
-import { goalProgress, progressCaption } from './progress'
+import { progressSlices } from './progress'
 import { importantGoals, nextTasks, weekTasks } from './select'
 import type { Goal, Task } from './types'
 import { normalizeHttpUrl, safeHttpUrl } from './urls'
 
-describe('goalProgress', () => {
-  it('uses activities when any exist', () => {
-    expect(goalProgress([{ completed: true }], [{ completed: true }, { completed: false }], 'active')).toBe(50)
+describe('progressSlices', () => {
+  it('keeps milestones and activities as separate measures', () => {
+    expect(progressSlices([{ completed: true }, { completed: false }], [{ completed: false }], 'active')).toEqual([
+      { kind: 'milestones', caption: '1 av 2 delmål', percent: 50 },
+      { kind: 'tasks', caption: '0 av 1 aktiviteter', percent: 0 },
+    ])
   })
 
-  it('falls back to milestones when there are no activities', () => {
-    expect(goalProgress([{ completed: true }, { completed: true }, { completed: false }], [], 'active')).toBe(67)
+  it('uses milestones alone when there are no activities', () => {
+    expect(progressSlices([{ completed: true }, { completed: true }, { completed: false }], [], 'active')).toEqual([
+      { kind: 'milestones', caption: '2 av 3 delmål', percent: 67 },
+    ])
   })
 
   it('is 100 only for a completed goal without children', () => {
-    expect(goalProgress([], [], 'completed')).toBe(100)
-    expect(goalProgress([], [], 'active')).toBe(0)
-  })
-
-  it('describes the source of the percentage', () => {
-    expect(progressCaption([], [{ completed: false }])).toBe('0 av 1 aktiviteter')
-    expect(progressCaption([{ completed: true }], [])).toBe('1 av 1 delmål')
+    expect(progressSlices([], [], 'completed')).toEqual([{ kind: 'status', caption: 'Uppnått', percent: 100 }])
+    expect(progressSlices([], [], 'active')).toEqual([{ kind: 'status', caption: 'Inga delmål eller aktiviteter ännu', percent: 0 }])
   })
 })
 
@@ -34,6 +35,17 @@ describe('dueLabel', () => {
     expect(dueLabel('2026-11-18', today)).toBe('Idag')
     expect(dueLabel('2026-11-19', today)).toBe('Imorgon')
     expect(dueLabel(null, today)).toBeNull()
+  })
+})
+
+describe('database errors', () => {
+  it('tells the user to refresh the schema cache when a new column is missing from it', () => {
+    expect(
+      toUserMessage({
+        code: 'PGRST204',
+        message: "Could not find the 'primary_language' column of 'projects' in the schema cache",
+      }),
+    ).toMatch(/Refresh schema cache/)
   })
 })
 

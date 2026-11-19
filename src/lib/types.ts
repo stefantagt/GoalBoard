@@ -2,7 +2,7 @@ export type GoalCategory = 'ekonomi' | 'egna_projekt' | 'halsa' | 'familj' | 'ov
 
 export type GoalStatus = 'active' | 'paused' | 'completed' | 'archived'
 
-export type ProjectStatus = 'idea' | 'active' | 'paused' | 'done' | 'archived'
+export type ProjectStatus = 'idea' | 'active' | 'paused' | 'done' | 'launched' | 'archived'
 
 export type Goal = {
   id: string
@@ -54,6 +54,13 @@ export type Project = {
   github_url: string
   live_url: string
   notes: string
+  primary_language: string
+  languages: string
+  line_count: number | null
+  file_count: number | null
+  folder_count: number | null
+  repo_changed_on: string | null
+  features: string
   created_at: string
   updated_at: string
 }
@@ -76,6 +83,13 @@ export type ProjectDraft = {
   github_url: string
   live_url: string
   notes: string
+  primary_language: string
+  languages: string
+  line_count: string
+  file_count: string
+  folder_count: string
+  repo_changed_on: string
+  features: string
   goal_id: string
 }
 
@@ -97,5 +111,12 @@ export const emptyProjectDraft = (): ProjectDraft => ({
   github_url: '',
   live_url: '',
   notes: '',
+  primary_language: '',
+  languages: '',
+  line_count: '',
+  file_count: '',
+  folder_count: '',
+  repo_changed_on: '',
+  features: '',
   goal_id: '',
 })
